@@ -14,7 +14,7 @@ const assets = {
 };
 
 const Icon = ({ name, className = "h-5 w-5" }: { name: string; className?: string }) => {
-  const p = {
+  const p: Record<string, React.ReactNode> = {
     arrow: <path d="M5 12h14M13 5l7 7-7 7" />,
     menu: <path d="M4 7h16M4 12h16M4 17h16" />,
     x: <path d="M6 6l12 12M18 6 6 18" />,
@@ -27,7 +27,7 @@ const Icon = ({ name, className = "h-5 w-5" }: { name: string; className?: strin
     sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" /></>,
     moon: <path d="M21 12.8A8 8 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8z" />,
   };
-  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{p[name]}</svg>;
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{p[name] ?? p.truck}</svg>;
 };
 
 const Button = ({ children, className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} className={`inline-flex items-center justify-center transition ${className}`}>{children}</button>;
