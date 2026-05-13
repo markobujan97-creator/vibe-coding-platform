@@ -13,7 +13,7 @@ const assets = {
   alpine: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_3031-scaled.jpg",
 };
 
-const Icon = ({ name, className = "h-5 w-5" }) => {
+const Icon = ({ name, className = "h-5 w-5" }: { name: string; className?: string }) => {
   const p = {
     arrow: <path d="M5 12h14M13 5l7 7-7 7" />,
     menu: <path d="M4 7h16M4 12h16M4 17h16" />,
@@ -30,7 +30,7 @@ const Icon = ({ name, className = "h-5 w-5" }) => {
   return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{p[name]}</svg>;
 };
 
-const Button = ({ children, className = "", ...props }) => <button {...props} className={`inline-flex items-center justify-center transition ${className}`}>{children}</button>;
+const Button = ({ children, className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => <button {...props} className={`inline-flex items-center justify-center transition ${className}`}>{children}</button>;
 
 const gallery = [
   { title: "Spezialtransporte", image: assets.alpine, tag: "Schweizweit" },
@@ -43,7 +43,7 @@ function Logo() {
   return <img src={logoData} alt="Rohner AG Transporte Logo" className="h-[58px] w-auto object-contain" />;
 }
 
-function TruckBrightnessControl({ value, onChange }) {
+function TruckBrightnessControl({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   const pos = `${value}%`;
   return (
     <section id="design-drive" className="px-5 py-24">
