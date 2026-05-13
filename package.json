@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "framer-motion": "^11.18.2",
     "@ai-sdk/gateway": "3.0.59",
     "@ai-sdk/openai": "3.0.37",
     "@ai-sdk/provider": "3.0.8",
