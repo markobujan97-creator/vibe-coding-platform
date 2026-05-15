@@ -1,198 +1,1309 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
-const logoData = "data:image/png;base64,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";
+// ─── SVG ICONS ───────────────────────────────────────────────────────────────
+const TruckIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1" y="3" width="15" height="13" rx="1"/>
+    <path d="M16 8h4l3 5v4h-7V8z"/>
+    <circle cx="5.5" cy="18.5" r="2.5"/>
+    <circle cx="18.5" cy="18.5" r="2.5"/>
+  </svg>
+);
 
-const images = {
-  hero: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_1164-scaled.jpg",
-  night: "https://rohner-transport.ch/wp-content/uploads/2024/11/Nachtschicht.jpg",
-  tipper: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_8241-scaled.jpg",
-  excavation: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_7120-scaled.jpg",
-  alpine: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_3031-scaled.jpg",
+const CraneIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="4" y1="21" x2="4" y2="3"/>
+    <line x1="4" y1="3" x2="20" y2="3"/>
+    <line x1="20" y1="3" x2="20" y2="8"/>
+    <line x1="4" y1="10" x2="20" y2="10"/>
+    <path d="M4 3l8 7"/>
+    <line x1="20" y1="8" x2="20" y2="21"/>
+  </svg>
+);
+
+const KipperIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1" y="10" width="12" height="9" rx="1"/>
+    <path d="M13 13l5-5h4v6h-9"/>
+    <path d="M7 10V7l4-4h5l2 4"/>
+    <circle cx="5" cy="20" r="1.5"/>
+    <circle cx="18" cy="20" r="1.5"/>
+  </svg>
+);
+
+const StarIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+  </svg>
+);
+
+const PhoneIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.63 19.79 19.79 0 01.08 2.08 2 2 0 012.08 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+  </svg>
+);
+
+const MailIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </svg>
+);
+
+const MapPinIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+    <circle cx="12" cy="10" r="3"/>
+  </svg>
+);
+
+const CloseIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
+const CheckIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const ArrowRightIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12"/>
+    <polyline points="12 5 19 12 12 19"/>
+  </svg>
+);
+
+const MenuIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+);
+
+const ShieldIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+
+const ClockIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </svg>
+);
+
+const SwissIcon = ({ size = 24, color = "currentColor" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke="none">
+    <rect width="24" height="24" rx="3" fill="#D52B1E"/>
+    <rect x="10" y="5" width="4" height="14" fill="white"/>
+    <rect x="5" y="10" width="14" height="4" fill="white"/>
+  </svg>
+);
+
+// ─── TYPES ────────────────────────────────────────────────────────────────────
+type MissionType = "transport" | "kran" | "kipper" | "spezial";
+
+interface Mission {
+  id: MissionType;
+  label: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  image: string;
+  description: string;
+  details: string[];
+  color: string;
+}
+
+interface FleetItem {
+  id: number;
+  title: string;
+  category: string;
+  image: string;
+  specs: string;
+}
+
+interface TimelineStep {
+  id: number;
+  label: string;
+  desc: string;
+  icon: React.ReactNode;
+}
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const IMAGES = {
+  nacht: "https://rohner-transport.ch/wp-content/uploads/2024/11/Nachtschicht.jpg",
+  img1: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_1164-scaled.jpg",
+  img2: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_8241-scaled.jpg",
+  img3: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_7120-scaled.jpg",
+  img4: "https://rohner-transport.ch/wp-content/uploads/2024/11/IMG_3031-scaled.jpg",
 };
 
-type IconName = "arrow" | "menu" | "x" | "phone" | "mail" | "pin" | "truck" | "crane" | "route" | "sun" | "moon" | "play" | "check" | "spark" | "send";
-
-function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: string }) {
-  const icons: Record<IconName, React.ReactNode> = {
-    arrow: <path d="M5 12h14M13 5l7 7-7 7" />,
-    menu: <path d="M4 7h16M4 12h16M4 17h16" />,
-    x: <path d="M6 6l12 12M18 6 6 18" />,
-    phone: <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.4 2.1L8 9.7a16 16 0 0 0 6.3 6.3l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z" />,
-    mail: <><path d="M4 4h16v16H4z" /><path d="m22 6-10 7L2 6" /></>,
-    pin: <><path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 1 1 18 0z" /><circle cx="12" cy="10" r="3" /></>,
-    truck: <><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z" /><circle cx="7" cy="18" r="2" /><circle cx="18" cy="18" r="2" /></>,
-    crane: <><path d="M4 21V8l8-5 8 5M4 8h16M8 21V8M14 21V8" /></>,
-    route: <><circle cx="6" cy="18" r="2" /><circle cx="18" cy="6" r="2" /><path d="M8 18c7 0 2-12 8-12" /></>,
-    sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" /></>,
-    moon: <path d="M21 12.8A8 8 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8z" />,
-    play: <path d="M8 5v14l11-7z" />,
-    check: <path d="M20 6 9 17l-5-5" />,
-    spark: <path d="M13 2 3 14h8l-1 8 11-14h-8z" />,
-    send: <path d="m22 2-7 20-4-9-9-4 20-7z" />,
-  };
-  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icons[name]}</svg>;
-}
-
-function Button({ children, className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button {...props} className={`inline-flex items-center justify-center transition active:scale-[0.98] ${className}`}>{children}</button>;
-}
-
-function scrollToId(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-const services = [
-  { title: "Spezialtransport", icon: "truck" as IconName, image: images.alpine, text: "Schwere Güter, enge Zeitfenster, saubere Routenplanung.", steps: ["Ladegut", "Route", "Fahrzeug"] },
-  { title: "Kranarbeiten", icon: "crane" as IconName, image: images.hero, text: "Reichweite, Hebepunkt und Timing als Einsatz-Simulation.", steps: ["Hebepunkt", "Radius", "Sicherheit"] },
-  { title: "Baustellenlogistik", icon: "route" as IconName, image: images.excavation, text: "Materialfluss, Zufahrten und Entladung direkt koordinieren.", steps: ["Zeitfenster", "Zufahrt", "Entladung"] },
-  { title: "Kipper & Mulden", icon: "spark" as IconName, image: images.tipper, text: "Schüttgut, Aushub und Muldenservice mit klarer Disposition.", steps: ["Material", "Menge", "Abholung"] },
+const MISSIONS: Mission[] = [
+  {
+    id: "transport",
+    label: "Transporte",
+    subtitle: "Zuverlässig. Pünktlich. Schweizweit.",
+    icon: <TruckIcon size={22} />,
+    image: IMAGES.img1,
+    description: "Von regionalen Lieferungen bis zu schweizweiten Transporten – Rohner liefert präzise, sicher und termingerecht.",
+    details: ["Schweizweite Abdeckung", "24/7 Disposition", "GPS-Tracking", "Zertifizierte Fahrer"],
+    color: "#0b3624",
+  },
+  {
+    id: "kran",
+    label: "Kranarbeiten",
+    subtitle: "Kraft trifft Präzision.",
+    icon: <CraneIcon size={22} />,
+    image: IMAGES.nacht,
+    description: "Unsere modernen Krane meistern auch die anspruchsvollsten Hebe- und Montageeinsätze auf Baustellen jeder Grösse.",
+    details: ["Bis 80 Tonnen Hebelast", "Nacht- & Wochenendeinsätze", "Erfahrene Kranführer", "Sicherheit zertifiziert"],
+    color: "#0b3624",
+  },
+  {
+    id: "kipper",
+    label: "Kippertransporte",
+    subtitle: "Schüttgut. Erde. Aushub.",
+    icon: <KipperIcon size={22} />,
+    image: IMAGES.img2,
+    description: "Aushub, Kies, Sand, Recycling – unsere Kipper-Flotte bewältigt jede Menge Schüttgut effizient und sauber.",
+    details: ["Verschiedene Kippertypen", "Baustellengerecht", "Schnelle Rotation", "Entsorgungslogistik"],
+    color: "#0b3624",
+  },
+  {
+    id: "spezial",
+    label: "Spezialtransporte",
+    subtitle: "Wenn normal nicht reicht.",
+    icon: <StarIcon size={22} />,
+    image: IMAGES.img3,
+    description: "Übermasse, Schwertransporte, Maschinen – was andere ablehnen, ist für Rohner eine lösbare Herausforderung.",
+    details: ["Schwertransportgenehmigungen", "Routenplanung", "Begleitfahrzeuge", "Sondermasse bis 120t"],
+    color: "#0b3624",
+  },
 ];
 
-export default function Page() {
+const FLEET: FleetItem[] = [
+  { id: 1, title: "Nachtschicht-Kran", category: "Kranarbeit", image: IMAGES.nacht, specs: "80t Hebelast" },
+  { id: 2, title: "Schwertransport", category: "Spezialtransport", image: IMAGES.img1, specs: "Überbreite +" },
+  { id: 3, title: "Kipper-Einsatz", category: "Kippertransport", image: IMAGES.img2, specs: "Schüttgut 30m³" },
+  { id: 4, title: "Baustellenlogistik", category: "Transport", image: IMAGES.img3, specs: "Just-in-time" },
+  { id: 5, title: "Materialtransport", category: "Transport", image: IMAGES.img4, specs: "Schweizweit" },
+];
+
+const TIMELINE_STEPS: TimelineStep[] = [
+  { id: 1, label: "Anfrage", desc: "Kontakt aufnehmen", icon: <MailIcon size={18} /> },
+  { id: 2, label: "Planung", desc: "Route & Ressourcen", icon: <MapPinIcon size={18} /> },
+  { id: 3, label: "Fahrzeug", desc: "Disposition & Zuteilung", icon: <TruckIcon size={18} /> },
+  { id: 4, label: "Einsatz", desc: "Ausführung vor Ort", icon: <CraneIcon size={18} /> },
+  { id: 5, label: "Abschluss", desc: "Lieferung & Bestätigung", icon: <CheckIcon size={18} /> },
+];
+
+// ─── PROGRESS BAR ─────────────────────────────────────────────────────────────
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  return (
+    <motion.div
+      className="fixed top-0 left-0 right-0 h-1 origin-left z-[100]"
+      style={{
+        scaleX: scrollYProgress,
+        background: "linear-gradient(90deg, #0b3624, #f4c430)",
+      }}
+    />
+  );
+}
+
+// ─── LOGO ─────────────────────────────────────────────────────────────────────
+function Logo({ dark = false }: { dark?: boolean }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {/* Logo-Platzhalter – einfach durch <Image src="/logo.png" …/> ersetzen */}
+      <div className="relative w-9 h-9 flex-shrink-0">
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: dark ? "#f4c430" : "#0b3624" }}>
+          <TruckIcon size={20} color={dark ? "#0b3624" : "#f4c430"} />
+        </div>
+      </div>
+      <div className="flex flex-col leading-tight">
+        <span className={`text-sm font-black tracking-widest uppercase ${dark ? "text-stone-900" : "text-[#0b3624]"}`} style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.12em" }}>
+          Rohner AG
+        </span>
+        <span className={`text-[10px] font-semibold tracking-[0.2em] uppercase ${dark ? "text-stone-600" : "text-stone-500"}`}>
+          Transporte
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeService, setActiveService] = useState(1);
-  const [look, setLook] = useState(78);
-  const [quoteOpen, setQuoteOpen] = useState(false);
-  const [videoOpen, setVideoOpen] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const nav = useMemo(() => [
-    ["leistungen", "Leistungen"],
-    ["mission", "Mission"],
-    ["drive", "Design-Drive"],
-    ["fuhrpark", "Fuhrpark"],
-    ["kontakt", "Kontakt"],
-  ], []);
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
 
-  const active = services[activeService];
-  const dark = 1 - look / 100;
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMenuOpen(false);
+  };
+
+  const navLinks = [
+    { label: "Leistungen", id: "mission" },
+    { label: "Fuhrpark", id: "fuhrpark" },
+    { label: "Ablauf", id: "timeline" },
+    { label: "Kontakt", id: "kontakt" },
+  ];
 
   return (
-    <main
-      className="min-h-screen overflow-hidden text-[#073724] transition-colors duration-500"
-      style={{ background: `linear-gradient(180deg, rgb(${255 - dark * 34},${254 - dark * 42},${248 - dark * 52}), rgb(${247 - dark * 44},${246 - dark * 44},${237 - dark * 50}))` }}
-    >
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-[#073724]/10 bg-white/90 backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <button onClick={() => scrollToId("home")} className="rounded-2xl bg-[#fff2c5] p-1 shadow-lg ring-1 ring-[#f3bf14]/40">
-            <img src={logoData} alt="Rohner AG Transporte Logo" className="h-12 w-auto object-contain sm:h-14" />
+    <>
+      <motion.nav
+        initial={{ y: -80 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-md shadow-lg shadow-stone-200/60" : "bg-transparent"}`}
+      >
+        <div className="max-w-7xl mx-auto px-5 flex items-center justify-between h-16">
+          <button onClick={() => scrollTo("hero")} className="hover:opacity-80 transition-opacity">
+            <Logo />
           </button>
 
-          <nav className="hidden items-center gap-7 md:flex">
-            {nav.map(([id, label]) => (
-              <button key={id} onClick={() => scrollToId(id)} className="text-sm font-black text-[#073724]/70 hover:text-[#d9a900]">{label}</button>
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <button
+                key={link.id}
+                onClick={() => scrollTo(link.id)}
+                className="text-sm font-semibold tracking-wide text-stone-700 hover:text-[#0b3624] transition-colors relative group"
+              >
+                {link.label}
+                <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-[#f4c430] group-hover:w-full transition-all duration-300" />
+              </button>
             ))}
-          </nav>
-
-          <div className="hidden items-center gap-3 md:flex">
-            <a href="tel:0562505454" className="inline-flex items-center gap-2 rounded-full bg-[#f7f3e4] px-4 py-3 text-sm font-black"><Icon name="phone" className="h-4 w-4 text-[#d9a900]" />056 250 54 54</a>
-            <Button onClick={() => setQuoteOpen(true)} className="rounded-full bg-[#073724] px-5 py-3 font-black text-white hover:bg-[#0d5a3c]">Anfrage</Button>
+            <button
+              onClick={() => scrollTo("kontakt")}
+              className="ml-2 px-5 py-2.5 rounded-full text-sm font-bold text-white transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg"
+              style={{ background: "#0b3624" }}
+            >
+              Jetzt anfragen
+            </button>
           </div>
 
-          <Button onClick={() => setMenuOpen((v) => !v)} className="rounded-full border border-[#073724]/10 bg-white p-3 shadow md:hidden">
-            <Icon name={menuOpen ? "x" : "menu"} />
-          </Button>
+          {/* Mobile burger */}
+          <button
+            className="md:hidden p-2 rounded-lg hover:bg-stone-100 transition-colors"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Menü öffnen"
+          >
+            {menuOpen ? <CloseIcon size={22} color="#0b3624" /> : <MenuIcon size={22} color="#0b3624" />}
+          </button>
         </div>
+      </motion.nav>
 
+      {/* Mobile menu */}
+      <AnimatePresence>
         {menuOpen && (
-          <div className="border-t border-[#073724]/10 bg-white px-4 py-4 shadow-2xl md:hidden">
-            <div className="grid gap-2">
-              {nav.map(([id, label]) => (
-                <button key={id} onClick={() => { setMenuOpen(false); scrollToId(id); }} className="rounded-2xl bg-[#f7f3e4] px-4 py-4 text-left text-sm font-black text-[#073724]">{label}</button>
+          <motion.div
+            key="mobile-menu"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-40 bg-white flex flex-col pt-24 px-6 pb-10"
+          >
+            {/* decorative */}
+            <div className="absolute top-0 right-0 w-48 h-48 rounded-bl-full opacity-5" style={{ background: "#0b3624" }} />
+            <div className="flex flex-col gap-1 flex-1">
+              {navLinks.map((link, i) => (
+                <motion.button
+                  key={link.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.07 }}
+                  onClick={() => scrollTo(link.id)}
+                  className="flex items-center justify-between w-full px-4 py-4 rounded-xl text-left text-xl font-bold text-stone-800 hover:bg-stone-50 transition-colors group"
+                >
+                  {link.label}
+                  <ArrowRightIcon size={18} color="#0b3624" />
+                </motion.button>
               ))}
-              <Button onClick={() => { setMenuOpen(false); setQuoteOpen(true); }} className="rounded-2xl bg-[#f3bf14] px-4 py-4 font-black text-[#073724]">Anfrage öffnen</Button>
             </div>
-          </div>
+            <div className="flex flex-col gap-3 mt-6">
+              <a href="tel:0562505454" className="flex items-center gap-3 px-4 py-4 rounded-xl font-semibold text-white transition-all active:scale-95" style={{ background: "#0b3624" }}>
+                <PhoneIcon size={18} color="#f4c430" /> 056 250 54 54
+              </a>
+              <a href="mailto:info@rohner-transport.ch" className="flex items-center gap-3 px-4 py-4 rounded-xl font-semibold text-stone-800 border-2 border-stone-200 transition-all active:scale-95">
+                <MailIcon size={18} color="#0b3624" /> E-Mail schreiben
+              </a>
+            </div>
+          </motion.div>
         )}
-      </header>
+      </AnimatePresence>
+    </>
+  );
+}
 
-      <section id="home" className="relative px-4 pb-16 pt-28 sm:px-5 lg:pt-36">
-        <div className="absolute left-0 top-24 h-64 w-64 rounded-full bg-[#f3bf14]/30 blur-3xl" />
-        <div className="absolute right-0 top-24 h-80 w-80 rounded-full bg-[#073724]/10 blur-3xl" />
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
-          <div className="relative z-10">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.22em] shadow-lg ring-1 ring-[#073724]/10"><span className="h-2 w-2 rounded-full bg-[#f3bf14]" /> Interaktive Website Demo</div>
-            <p className="font-black uppercase tracking-[0.35em] text-[#d9a900]">Rohner AG Transporte</p>
-            <h1 className="mt-4 text-5xl font-black leading-[0.9] tracking-tight sm:text-6xl md:text-8xl">Schweres bewegen. <span className="text-[#d9a900]">Digital erleben.</span></h1>
-            <p className="mt-6 max-w-2xl text-base font-semibold leading-7 text-[#073724]/65 sm:text-xl sm:leading-8">Jetzt mit echtem Logo, klickbarem Mobile-Menü, Anfrage-Overlay, Video-Overlay, Mission-Control und Rohner-Truck als Design-Regler.</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button onClick={() => setQuoteOpen(true)} className="group rounded-full bg-[#073724] px-7 py-5 text-sm font-black text-white shadow-xl hover:bg-[#0d5a3c] sm:text-base">Einsatz konfigurieren <Icon name="arrow" className="ml-2 h-5 w-5 transition group-hover:translate-x-1" /></Button>
-              <Button onClick={() => setVideoOpen(true)} className="rounded-full border border-[#073724]/15 bg-white px-7 py-5 text-sm font-black shadow-lg hover:bg-[#fff2c5] sm:text-base"><Icon name="play" className="mr-2 h-5 w-5 text-[#d9a900]" /> Video ansehen</Button>
+// ─── HERO ─────────────────────────────────────────────────────────────────────
+function Hero({ brightness }: { brightness: number }) {
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.3]);
+
+  return (
+    <section id="hero" className="relative min-h-screen flex items-center overflow-hidden bg-stone-50">
+      {/* Parallax image */}
+      <motion.div className="absolute inset-0" style={{ y: heroY }}>
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-all duration-150"
+          style={{
+            backgroundImage: `url(${IMAGES.nacht})`,
+            filter: `brightness(${brightness * 0.4 + 0.15})`,
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(135deg, rgba(11,54,36,${0.82 - brightness * 0.25}) 0%, rgba(11,54,36,${0.5 - brightness * 0.2}) 40%, rgba(244,196,48,${0.05 + brightness * 0.08}) 100%)`,
+          }}
+        />
+      </motion.div>
+
+      {/* Animated gold light lines */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[20, 50, 75].map((top, i) => (
+          <motion.div
+            key={i}
+            className="absolute h-px"
+            style={{ top: `${top}%`, background: `linear-gradient(90deg, transparent, #f4c430, transparent)`, width: "60%", left: "-10%" }}
+            animate={{ x: ["0%", "120%"] }}
+            transition={{ duration: 4 + i * 1.5, repeat: Infinity, ease: "linear", delay: i * 1.2 }}
+          />
+        ))}
+      </div>
+
+      {/* Content */}
+      <motion.div
+        className="relative z-10 max-w-7xl mx-auto px-5 w-full pt-24 pb-16"
+        style={{ opacity: heroOpacity }}
+      >
+        <div className="max-w-3xl">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase"
+            style={{ background: "rgba(244,196,48,0.15)", border: "1px solid rgba(244,196,48,0.4)", color: "#f4c430" }}
+          >
+            <SwissIcon size={14} color="#f4c430" /> Schweizweit · Aargau · seit 2010
+          </motion.div>
+
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-white leading-[0.92] mb-6"
+            style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "clamp(3rem, 8vw, 6rem)", fontWeight: 900, letterSpacing: "-0.02em" }}
+          >
+            JEDE LAST.<br />
+            <span style={{ color: "#f4c430" }}>JEDE MISSION.</span><br />
+            ROHNER.
+          </motion.h1>
+
+          {/* Sub */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="text-white/80 text-lg mb-10 max-w-xl font-medium"
+          >
+            Transporte, Kranarbeiten & Spezialtransporte — präzise, kraftvoll, zuverlässig. Rohner AG aus Siglistorf, Aargau.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75 }}
+            className="flex flex-wrap gap-4"
+          >
+            <motion.button
+              onClick={() => scrollTo("mission")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              className="px-7 py-4 rounded-full font-black text-base tracking-wide flex items-center gap-2 shadow-2xl"
+              style={{ background: "#f4c430", color: "#0b3624" }}
+            >
+              <TruckIcon size={18} color="#0b3624" />
+              Mission starten
+            </motion.button>
+            <motion.button
+              onClick={() => scrollTo("kontakt")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              className="px-7 py-4 rounded-full font-black text-base tracking-wide border-2 text-white flex items-center gap-2"
+              style={{ borderColor: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}
+            >
+              <PhoneIcon size={18} color="white" />
+              Kontakt
+            </motion.button>
+          </motion.div>
+        </div>
+
+        {/* Floating stat cards */}
+        <div className="hidden md:flex absolute right-5 top-1/2 -translate-y-1/2 flex-col gap-4 z-20">
+          {[
+            { val: "24/7", label: "Disposition" },
+            { val: "80t", label: "Max. Last" },
+            { val: "CH", label: "Schweizweit" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.9 + i * 0.15 }}
+              className="w-28 h-20 rounded-2xl flex flex-col items-center justify-center gap-1 backdrop-blur-md border"
+              style={{ background: "rgba(255,255,255,0.12)", borderColor: "rgba(244,196,48,0.3)" }}
+            >
+              <span className="text-2xl font-black text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{stat.val}</span>
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-white/60">{stat.label}</span>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Scroll hint */}
+        <motion.div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/40 text-xs font-medium tracking-widest uppercase"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <span>Scroll</span>
+          <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+            <rect x="1" y="1" width="14" height="18" rx="7" stroke="currentColor" strokeWidth="1.5"/>
+            <motion.rect x="6.5" y="5" width="3" height="5" rx="1.5" fill="currentColor"
+              animate={{ y: [0, 4, 0] }} transition={{ duration: 2, repeat: Infinity }} />
+          </svg>
+        </motion.div>
+      </motion.div>
+    </section>
+  );
+}
+
+// ─── CONTRAST SLIDER ─────────────────────────────────────────────────────────
+function ContrastSlider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <section className="py-10 px-5 bg-stone-100 border-y border-stone-200">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-bold tracking-widest uppercase text-stone-500">Design-Atmosphäre</span>
+          <span className="text-xs font-semibold text-stone-400">{Math.round(value * 100)}%</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col items-center gap-1 min-w-[60px]">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#0b3624" }}>
+              <TruckIcon size={14} color="#f4c430" />
             </div>
-            <div className="mt-8 grid grid-cols-3 gap-2 sm:max-w-xl sm:gap-3">
-              {[["24/7", "bereit"], ["1980", "seit"], ["CH", "regional"]].map(([a, b]) => <div key={a} className="rounded-3xl bg-white p-4 shadow-lg ring-1 ring-[#073724]/10 sm:p-5"><div className="text-2xl font-black sm:text-3xl">{a}</div><div className="text-xs font-black uppercase tracking-[0.18em] text-[#d9a900]">{b}</div></div>)}
-            </div>
+            <span className="text-[9px] font-bold tracking-wider uppercase text-stone-500 text-center">Baustellen-<br />Power</span>
           </div>
-          <div className="relative min-h-[430px] overflow-hidden rounded-[2.3rem] bg-white shadow-[0_40px_120px_rgba(10,48,33,0.16)] ring-1 ring-[#073724]/10 sm:min-h-[610px] sm:rounded-[3.5rem]">
-            <img src={images.hero} alt="Rohner Lastwagen mit Kran" className="absolute inset-0 h-full w-full object-cover" style={{ filter: `brightness(${0.86 + look / 450}) saturate(1.06)` }} />
-            <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/25 to-transparent" />
-            <div className="absolute bottom-5 left-5 right-5 rounded-[1.5rem] bg-white/92 p-5 shadow-xl backdrop-blur-xl ring-1 ring-[#073724]/10 sm:bottom-8 sm:left-8 sm:right-auto sm:w-[430px]">
-              <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-[0.25em] text-[#d9a900]">Live Mission</p><h3 className="mt-1 text-2xl font-black">Kran-Einsatz bereit</h3></div><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f3bf14]"><Icon name="crane" className="h-7 w-7" /></div></div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#e8eadf]"><div className="h-full w-[78%] rounded-full bg-[#073724]" /></div>
+
+          <div className="flex-1 relative">
+            <div className="relative h-3 rounded-full overflow-hidden"
+              style={{ background: `linear-gradient(90deg, #0b3624 0%, #1a5c3a ${value * 60}%, #f4c430 100%)` }}>
             </div>
+            <input
+              type="range" min={0} max={1} step={0.01} value={value}
+              onChange={(e) => onChange(Number(e.target.value))}
+              className="absolute inset-0 w-full opacity-0 cursor-pointer h-3 top-0"
+              style={{ WebkitAppearance: "none" }}
+            />
+            {/* Custom thumb */}
+            <motion.div
+              className="absolute top-1/2 -translate-y-1/2 w-8 h-8 rounded-full shadow-lg flex items-center justify-center pointer-events-none"
+              style={{ left: `calc(${value * 100}% - 16px)`, background: "#f4c430", border: "3px solid white" }}
+              whileHover={{ scale: 1.1 }}
+            >
+              <TruckIcon size={12} color="#0b3624" />
+            </motion.div>
+          </div>
+
+          <div className="flex flex-col items-center gap-1 min-w-[60px]">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#f4c430" }}>
+              <TruckIcon size={14} color="#0b3624" />
+            </div>
+            <span className="text-[9px] font-bold tracking-wider uppercase text-stone-500 text-center">Premium-<br />Klarheit</span>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      <section id="leistungen" className="px-4 py-20 sm:px-5 sm:py-28">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><p className="font-black uppercase tracking-[0.35em] text-[#d9a900]">Mission Control</p><h2 className="mt-3 max-w-4xl text-4xl font-black tracking-tight sm:text-6xl">Keine langweilige Leistungsliste. Ein Einsatz-Cockpit.</h2></div><p className="max-w-md text-base font-semibold leading-7 text-[#073724]/60 sm:text-lg">Klick auf eine Karte und die grosse Einsatzfläche ändert sich sofort.</p></div>
-          <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {services.map((item, i) => <button key={item.title} onClick={() => setActiveService(i)} className={`group rounded-[2rem] border p-5 text-left transition sm:p-6 ${activeService === i ? "border-[#f3bf14] bg-[#f3bf14] text-[#073724] shadow-2xl" : "border-[#073724]/10 bg-white text-[#073724] shadow-lg hover:-translate-y-1 hover:border-[#f3bf14]/70"}`}><div className="flex items-start justify-between"><Icon name={item.icon} className="h-8 w-8" /><span className="rounded-full bg-white/60 px-3 py-1 text-xs font-black">0{i + 1}</span></div><h3 className="mt-8 text-2xl font-black sm:text-3xl">{item.title}</h3><p className="mt-2 text-sm font-semibold opacity-70">{item.text}</p></button>)}
-            </div>
-            <div className="relative min-h-[500px] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-[#073724]/10 sm:min-h-[610px] sm:rounded-[3.2rem]">
-              <img src={active.image} alt={active.title} className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#073724]/80 via-[#073724]/5 to-white/20" />
-              <div className="absolute left-6 top-6 rounded-3xl bg-white/90 p-4 shadow-xl backdrop-blur-xl"><p className="text-xs font-black uppercase tracking-[0.25em] text-[#d9a900]">Aktiver Einsatz</p><h3 className="mt-1 text-3xl font-black">{active.title}</h3></div>
-              <div className="absolute bottom-6 left-6 right-6 rounded-[2rem] bg-white/92 p-5 backdrop-blur-xl sm:p-6"><p className="text-lg font-bold text-[#073724]/70">{active.text}</p><div className="mt-5 grid gap-3 sm:grid-cols-3">{active.steps.map((step, i) => <div key={step} className="rounded-2xl bg-[#f7f3e4] p-4"><div className="text-xs font-black uppercase tracking-[0.2em] text-[#d9a900]">Step {i + 1}</div><div className="mt-1 font-black">{step}</div></div>)}</div></div>
-            </div>
-          </div>
+// ─── STATS BAR ────────────────────────────────────────────────────────────────
+function StatsBar() {
+  const stats = [
+    { icon: <TruckIcon size={20} color="#f4c430" />, val: "50+", label: "Fahrzeuge" },
+    { icon: <ClockIcon size={20} color="#f4c430" />, val: "24/7", label: "Erreichbar" },
+    { icon: <SwissIcon size={20} color="#f4c430" />, val: "CH", label: "Schweizweit" },
+    { icon: <ShieldIcon size={20} color="#f4c430" />, val: "ISO", label: "Zertifiziert" },
+    { icon: <CheckIcon size={20} color="#f4c430" />, val: "100%", label: "Zuverlässigkeit" },
+  ];
+  return (
+    <section className="py-8 bg-[#0b3624]">
+      <div className="max-w-7xl mx-auto px-5">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {stats.map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="flex flex-col items-center gap-1.5 py-3"
+            >
+              {s.icon}
+              <span className="text-2xl font-black text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{s.val}</span>
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-white/50">{s.label}</span>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      <section id="mission" className="px-4 py-20 sm:px-5 sm:py-28">
-        <div className="mx-auto max-w-7xl rounded-[2.5rem] bg-[#073724] p-6 text-white shadow-2xl sm:rounded-[3.5rem] sm:p-12">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-            <div><p className="font-black uppercase tracking-[0.35em] text-[#f3bf14]">Live Board</p><h2 className="mt-3 text-4xl font-black sm:text-6xl">Digitale Einsatzplanung.</h2><p className="mt-5 text-lg font-semibold leading-8 text-white/70">Dieses Modul könnte später echte Anfragen sammeln. Jetzt ist es schon klickbar und zeigt ein interaktives Konzept.</p><Button onClick={() => setQuoteOpen(true)} className="mt-8 rounded-full bg-[#f3bf14] px-7 py-5 font-black text-[#073724] hover:bg-[#ffd84d]">Mission konfigurieren</Button></div>
-            <div className="grid gap-4 sm:grid-cols-3">{["Fahrzeug wählen", "Last erfassen", "Termin setzen"].map((x, i) => <div key={x} className="rounded-[2rem] bg-white/10 p-5 ring-1 ring-white/10"><div className="mb-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f3bf14] text-[#073724]"><Icon name={i === 0 ? "truck" : i === 1 ? "crane" : "route"} /></div><div className="text-2xl font-black">{x}</div><div className="mt-3 flex items-center gap-2 text-sm font-bold text-white/60"><Icon name="check" className="h-4 w-4 text-[#f3bf14]" /> bereit</div></div>)}</div>
+// ─── MISSION CONTROL ──────────────────────────────────────────────────────────
+function MissionControl({ onOpenModal }: { onOpenModal: (m: Mission) => void }) {
+  const [active, setActive] = useState<MissionType>("transport");
+  const currentMission = MISSIONS.find((m) => m.id === active)!;
+
+  return (
+    <section id="mission" className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-5">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-14"
+        >
+          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase" style={{ background: "rgba(11,54,36,0.06)", color: "#0b3624" }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#f4c430" }} />
+            Mission Control
           </div>
-        </div>
-      </section>
+          <h2 className="text-5xl md:text-6xl font-black text-stone-900 leading-[0.95]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            WAS KÖNNEN<br /><span style={{ color: "#0b3624" }}>WIR FÜR SIE TUN?</span>
+          </h2>
+        </motion.div>
 
-      <section id="drive" className="px-4 py-20 sm:px-5 sm:py-28">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-white shadow-[0_35px_110px_rgba(11,54,36,0.16)] ring-1 ring-[#073724]/10 sm:rounded-[3.5rem]">
-          <div className="grid gap-0 lg:grid-cols-[0.85fr_1.15fr]">
-            <div className="p-6 sm:p-10 md:p-14"><p className="font-black uppercase tracking-[0.35em] text-[#d9a900]">Design-Drive</p><h2 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">Der Truck fährt den Look.</h2><p className="mt-5 text-base font-semibold leading-7 text-[#073724]/65 sm:text-lg sm:leading-8">Zieh den LKW: die Website wird links dunkler und rechts heller. Das ist bewusst ein Branding-Spiel, nicht nur ein normaler Slider.</p></div>
-            <div className="relative min-h-[520px] overflow-hidden bg-[#eaf1ec] sm:min-h-[600px]">
-              <img src={images.alpine} alt="Bergstrasse" className="absolute inset-0 h-full w-full object-cover" style={{ filter: `brightness(${0.45 + look / 85}) saturate(${0.75 + look / 160})` }} />
-              <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(5,20,16,${0.72 - look / 180}) 0%, rgba(255,255,255,${look / 130}) 100%)` }} />
-              <div className="absolute bottom-24 left-6 right-6 h-4 rounded-full bg-white/85 shadow-inner ring-1 ring-black/10 sm:left-12 sm:right-12">
-                <div className="absolute left-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-gradient-to-r from-[#073724] to-[#f3bf14]" style={{ width: `${look}%` }} />
-                <div className="absolute top-1/2 w-36 -translate-x-1/2 -translate-y-[62%] sm:w-52" style={{ left: `${look}%` }}><img src={images.tipper} alt="Rohner Lastwagen als Regler" className="h-20 w-36 rounded-2xl object-cover object-center shadow-2xl ring-4 ring-white sm:h-28 sm:w-52" /><div className="mx-auto -mt-2 h-5 w-5 rounded-full bg-[#f3bf14] shadow-lg ring-4 ring-white" /></div>
-                <input aria-label="Website Helligkeit" type="range" min="0" max="100" value={look} onChange={(e) => setLook(Number(e.target.value))} className="absolute inset-0 h-32 w-full -translate-y-14 cursor-ew-resize opacity-0" />
+        <div className="grid md:grid-cols-2 gap-8 items-start">
+          {/* Left: Selector */}
+          <div className="flex flex-col gap-3">
+            {MISSIONS.map((m, i) => (
+              <motion.button
+                key={m.id}
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                onClick={() => setActive(m.id)}
+                className={`flex items-center gap-4 px-6 py-5 rounded-2xl border-2 text-left transition-all duration-200 group ${
+                  active === m.id
+                    ? "border-[#0b3624] shadow-lg"
+                    : "border-stone-100 bg-stone-50 hover:border-stone-200"
+                }`}
+                style={active === m.id ? { background: "#f8faf9" } : {}}
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200"
+                  style={{ background: active === m.id ? "#0b3624" : "#f0f0f0" }}
+                >
+                  <span style={{ color: active === m.id ? "#f4c430" : "#888" }}>{m.icon}</span>
+                </div>
+                <div className="flex-1">
+                  <div className="font-bold text-stone-900">{m.label}</div>
+                  <div className="text-sm text-stone-500">{m.subtitle}</div>
+                </div>
+                {active === m.id && (
+                  <motion.div layoutId="mission-check" className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "#f4c430" }}>
+                    <CheckIcon size={12} color="#0b3624" />
+                  </motion.div>
+                )}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Right: Detail */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active}
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -30 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="rounded-3xl overflow-hidden shadow-2xl border border-stone-100"
+            >
+              {/* Image */}
+              <div className="relative h-56 md:h-72 overflow-hidden">
+                <img
+                  src={currentMission.image}
+                  alt={currentMission.label}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(11,54,36,0.7), transparent)" }} />
+                {/* Status chip */}
+                <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold tracking-wide" style={{ background: "rgba(11,54,36,0.85)", color: "#f4c430", backdropFilter: "blur(8px)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse bg-green-400" />
+                  AKTIV
+                </div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="text-2xl font-black text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{currentMission.label}</h3>
+                  <p className="text-white/80 text-sm">{currentMission.subtitle}</p>
+                </div>
               </div>
-              <div className="absolute bottom-8 left-0 right-0 text-center text-xs font-black text-white drop-shadow sm:text-sm">← LKW ziehen und Website-Look verändern →</div>
+
+              {/* Details */}
+              <div className="p-6 bg-white">
+                <p className="text-stone-600 mb-5 leading-relaxed">{currentMission.description}</p>
+                <div className="grid grid-cols-2 gap-2 mb-6">
+                  {currentMission.details.map((d) => (
+                    <div key={d} className="flex items-center gap-2 text-sm text-stone-700 font-medium">
+                      <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0" style={{ background: "#f4c430" }}>
+                        <CheckIcon size={10} color="#0b3624" />
+                      </div>
+                      {d}
+                    </div>
+                  ))}
+                </div>
+                <motion.button
+                  onClick={() => onOpenModal(currentMission)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg"
+                  style={{ background: "#0b3624" }}
+                >
+                  Anfrage vorbereiten <ArrowRightIcon size={16} color="#f4c430" />
+                </motion.button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function MissionModal({ mission, onClose }: { mission: Mission | null; onClose: () => void }) {
+  useEffect(() => {
+    if (!mission) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [mission, onClose]);
+
+  return (
+    <AnimatePresence>
+      {mission && (
+        <>
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          <motion.div
+            key="modal"
+            initial={{ opacity: 0, scale: 0.9, y: 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 40 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed inset-x-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md top-1/2 -translate-y-1/2 z-[70] rounded-3xl overflow-hidden shadow-2xl"
+          >
+            {/* Header image */}
+            <div className="relative h-44 overflow-hidden">
+              <img src={mission.image} alt={mission.label} className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(11,54,36,0.85), rgba(11,54,36,0.3))" }} />
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
+              >
+                <CloseIcon size={18} color="white" />
+              </button>
+              <div className="absolute bottom-4 left-5">
+                <div className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: "#f4c430" }}>Ausgewählte Mission</div>
+                <h3 className="text-2xl font-black text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{mission.label}</h3>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="bg-white p-6">
+              <p className="text-stone-600 mb-5 text-sm leading-relaxed">{mission.description}</p>
+
+              <div className="rounded-2xl p-4 mb-6" style={{ background: "#f8faf9", border: "1px solid #e0ece4" }}>
+                <div className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#0b3624" }}>Zusammenfassung</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {mission.details.map((d) => (
+                    <div key={d} className="flex items-center gap-1.5 text-xs text-stone-700">
+                      <CheckIcon size={12} color="#0b3624" /> {d}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <a
+                  href={`mailto:info@rohner-transport.ch?subject=Anfrage: ${mission.label}`}
+                  className="flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-bold text-white transition-all active:scale-95 shadow-lg"
+                  style={{ background: "#0b3624" }}
+                >
+                  <MailIcon size={17} color="#f4c430" /> E-Mail schreiben
+                </a>
+                <a
+                  href="tel:0562505454"
+                  className="flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl font-bold transition-all active:scale-95"
+                  style={{ background: "#f4c430", color: "#0b3624" }}
+                >
+                  <PhoneIcon size={17} color="#0b3624" /> 056 250 54 54
+                </a>
+                <button
+                  onClick={onClose}
+                  className="py-3 text-sm font-semibold text-stone-500 hover:text-stone-700 transition-colors"
+                >
+                  Schliessen
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─── FLEET SHOWROOM ───────────────────────────────────────────────────────────
+function FleetShowroom() {
+  const [activeFleet, setActiveFleet] = useState<number | null>(null);
+
+  return (
+    <section id="fuhrpark" className="py-24" style={{ background: "#f7f5f0" }}>
+      <div className="max-w-7xl mx-auto px-5">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-14"
+        >
+          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase" style={{ background: "rgba(11,54,36,0.06)", color: "#0b3624" }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#f4c430" }} />
+            Fuhrpark Showroom
+          </div>
+          <h2 className="text-5xl md:text-6xl font-black text-stone-900 leading-[0.95]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            UNSERE<br /><span style={{ color: "#0b3624" }}>FLOTTE.</span>
+          </h2>
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {FLEET.map((item, i) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="relative rounded-2xl overflow-hidden cursor-pointer group shadow-lg"
+              style={{ aspectRatio: "4/3" }}
+              onClick={() => setActiveFleet(activeFleet === item.id ? null : item.id)}
+            >
+              <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+
+              {/* Scanner line on hover */}
+              <motion.div
+                className="absolute left-0 right-0 h-0.5 pointer-events-none"
+                style={{ background: "linear-gradient(90deg, transparent, #f4c430, transparent)", top: "0%" }}
+                animate={{ top: ["0%", "100%", "0%"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              />
+
+              {/* Overlay */}
+              <div className="absolute inset-0 transition-opacity duration-300" style={{ background: `linear-gradient(to top, rgba(11,54,36,0.85), rgba(11,54,36,${activeFleet === item.id ? "0.4" : "0.2"}))` }} />
+
+              {/* Labels */}
+              <div className="absolute top-3 left-3">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase" style={{ background: "rgba(244,196,48,0.9)", color: "#0b3624" }}>
+                  {item.category}
+                </span>
+              </div>
+
+              <div className="absolute bottom-0 left-0 right-0 p-5 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                <h3 className="text-lg font-black text-white mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{item.title}</h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/70">{item.specs}</span>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "#f4c430" }}>
+                    <ArrowRightIcon size={12} color="#0b3624" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── 3D CSS TRUCK CARD ────────────────────────────────────────────────────────
+function TruckCard3D() {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const r = cardRef.current.getBoundingClientRect();
+    const x = (e.clientY - r.top - r.height / 2) / (r.height / 2);
+    const y = -(e.clientX - r.left - r.width / 2) / (r.width / 2);
+    setTilt({ x: x * 12, y: y * 12 });
+  }, []);
+
+  return (
+    <section className="py-24 bg-[#0b3624] overflow-hidden relative">
+      {/* bg decoration */}
+      <div className="absolute inset-0 opacity-5">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="absolute w-px" style={{ left: `${(i + 1) * 12.5}%`, top: 0, bottom: 0, background: "#f4c430" }} />
+        ))}
+      </div>
+      <div className="max-w-7xl mx-auto px-5">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          {/* Text */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase" style={{ background: "rgba(244,196,48,0.15)", color: "#f4c430" }}>
+              Premium Qualität
+            </div>
+            <h2 className="text-5xl md:text-6xl font-black text-white leading-[0.95] mb-6" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              INDUSTRIE-<br />GRADE<br /><span style={{ color: "#f4c430" }}>AUSRÜSTUNG.</span>
+            </h2>
+            <p className="text-white/70 mb-8 text-lg leading-relaxed">
+              Modernste Fahrzeuge, professionell gewartet, für jeden Einsatz bereit. Rohner AG investiert in Qualität — für Ihre Sicherheit und Zuverlässigkeit.
+            </p>
+            <div className="flex flex-col gap-3">
+              {["Regelmässige TÜV-Kontrollen", "Modernste GPS-Technologie", "Zertifizierte Fahrer & Kranführer"].map((f) => (
+                <div key={f} className="flex items-center gap-3 text-white/80">
+                  <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: "#f4c430" }}>
+                    <CheckIcon size={11} color="#0b3624" />
+                  </div>
+                  <span className="text-sm font-medium">{f}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* 3D Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="flex justify-center"
+            style={{ perspective: "800px" }}
+          >
+            <div
+              ref={cardRef}
+              onMouseMove={handleMove}
+              onMouseLeave={() => setTilt({ x: 0, y: 0 })}
+              style={{
+                width: 320,
+                height: 400,
+                transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+                transition: "transform 0.1s ease-out",
+                transformStyle: "preserve-3d",
+              }}
+              className="relative rounded-3xl overflow-hidden cursor-pointer shadow-2xl"
+            >
+              <img src={IMAGES.img3} alt="Rohner Truck" className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(11,54,36,0.3), rgba(11,54,36,0.7))" }} />
+
+              {/* Shine effect */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `linear-gradient(${135 + tilt.y * 2}deg, rgba(255,255,255,0.15) 0%, transparent 50%)`,
+                }}
+              />
+
+              {/* Label */}
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="text-xs font-bold tracking-widest uppercase mb-1" style={{ color: "#f4c430" }}>ROHNER AG TRANSPORTE</div>
+                <div className="text-2xl font-black text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Siglistorf, Aargau</div>
+                <div className="flex items-center gap-1.5 mt-2">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <div key={s} className="w-3.5 h-3.5" style={{ color: "#f4c430" }}>★</div>
+                  ))}
+                  <span className="text-xs text-white/60 ml-1">Schweizer Qualität</span>
+                </div>
+              </div>
+
+              {/* Animated wheels */}
+              <div className="absolute bottom-4 right-4 flex gap-2">
+                {[0, 1].map((w) => (
+                  <motion.div
+                    key={w}
+                    className="w-6 h-6 rounded-full border-2 flex items-center justify-center"
+                    style={{ borderColor: "#f4c430" }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: w * 0.3 }}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#f4c430" }} />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── TIMELINE ─────────────────────────────────────────────────────────────────
+function Timeline() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const lineHeight = useTransform(scrollYProgress, [0.1, 0.9], ["0%", "100%"]);
+  const truckY = useTransform(scrollYProgress, [0.1, 0.9], ["0%", "88%"]);
+
+  return (
+    <section id="timeline" className="py-24 bg-white" ref={ref}>
+      <div className="max-w-7xl mx-auto px-5">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16 text-center"
+        >
+          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase" style={{ background: "rgba(11,54,36,0.06)", color: "#0b3624" }}>
+            Unser Ablauf
+          </div>
+          <h2 className="text-5xl md:text-6xl font-black text-stone-900 leading-[0.95]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            VON DER ANFRAGE<br /><span style={{ color: "#0b3624" }}>ZUR LIEFERUNG.</span>
+          </h2>
+        </motion.div>
+
+        {/* Desktop: horizontal */}
+        <div className="hidden md:block relative">
+          {/* Track */}
+          <div className="absolute top-12 left-12 right-12 h-0.5 bg-stone-100" />
+          <motion.div
+            className="absolute top-12 left-12 h-0.5 origin-left"
+            style={{ background: "linear-gradient(90deg, #0b3624, #f4c430)", width: lineHeight }}
+          />
+
+          <div className="grid grid-cols-5 gap-4 relative">
+            {TIMELINE_STEPS.map((step, i) => (
+              <motion.div
+                key={step.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="flex flex-col items-center text-center"
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center mb-4 relative z-10 shadow-lg"
+                  style={{ background: "#0b3624", border: "3px solid white" }}
+                >
+                  <span style={{ color: "#f4c430" }}>{step.icon}</span>
+                </div>
+                <div className="text-sm font-black text-stone-900 mb-1">{step.label}</div>
+                <div className="text-xs text-stone-500">{step.desc}</div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Truck moving along */}
+          <motion.div className="absolute" style={{ top: 2, left: lineHeight }}>
+            <TruckIcon size={18} color="#f4c430" />
+          </motion.div>
+        </div>
+
+        {/* Mobile: vertical */}
+        <div className="md:hidden relative pl-10">
+          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-stone-100" />
+          <motion.div
+            className="absolute left-4 top-0 w-0.5 origin-top"
+            style={{ background: "linear-gradient(180deg, #0b3624, #f4c430)", height: lineHeight }}
+          />
+
+          {/* Truck */}
+          <motion.div
+            className="absolute left-1"
+            style={{ top: truckY }}
+          >
+            <div className="rotate-90">
+              <TruckIcon size={16} color="#f4c430" />
+            </div>
+          </motion.div>
+
+          {TIMELINE_STEPS.map((step, i) => (
+            <motion.div
+              key={step.id}
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="relative flex gap-5 mb-8"
+            >
+              <div
+                className="absolute -left-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-md"
+                style={{ background: "#0b3624", border: "2px solid white" }}
+              >
+                <span style={{ color: "#f4c430" }}>{step.icon}</span>
+              </div>
+              <div>
+                <div className="font-bold text-stone-900 mb-1">{step.label}</div>
+                <div className="text-sm text-stone-500">{step.desc}</div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── CONTACT ─────────────────────────────────────────────────────────────────
+function Contact() {
+  const [sent, setSent] = useState(false);
+
+  return (
+    <section id="kontakt" className="py-24" style={{ background: "#f7f5f0" }}>
+      <div className="max-w-7xl mx-auto px-5">
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          {/* Left */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase" style={{ background: "rgba(11,54,36,0.06)", color: "#0b3624" }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#f4c430" }} />
+              Kontakt
+            </div>
+            <h2 className="text-5xl md:text-6xl font-black text-stone-900 leading-[0.95] mb-6" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              BEREIT FÜR<br /><span style={{ color: "#0b3624" }}>IHRE MISSION?</span>
+            </h2>
+            <p className="text-stone-600 mb-8 text-lg leading-relaxed">
+              Kontaktieren Sie uns direkt — wir antworten schnell und unkompliziert. Für dringende Anfragen sind wir 24/7 erreichbar.
+            </p>
+
+            <div className="flex flex-col gap-4">
+              <a
+                href="tel:0562505454"
+                className="flex items-center gap-4 px-6 py-4 rounded-2xl transition-all hover:scale-[1.02] active:scale-98 shadow-lg group"
+                style={{ background: "#0b3624" }}
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#f4c430" }}>
+                  <PhoneIcon size={20} color="#0b3624" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold tracking-widest uppercase text-white/50 mb-0.5">Telefon</div>
+                  <div className="text-lg font-black text-white">056 250 54 54</div>
+                </div>
+                <ArrowRightIcon size={18} color="rgba(255,255,255,0.3)" />
+              </a>
+
+              <a
+                href="mailto:info@rohner-transport.ch"
+                className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white transition-all hover:scale-[1.02] active:scale-98 shadow-md group border border-stone-100"
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(11,54,36,0.08)" }}>
+                  <MailIcon size={20} color="#0b3624" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold tracking-widest uppercase text-stone-400 mb-0.5">E-Mail</div>
+                  <div className="text-base font-bold text-stone-800">info@rohner-transport.ch</div>
+                </div>
+                <ArrowRightIcon size={18} color="#ccc" />
+              </a>
+
+              <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white shadow-md border border-stone-100">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(11,54,36,0.08)" }}>
+                  <MapPinIcon size={20} color="#0b3624" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold tracking-widest uppercase text-stone-400 mb-0.5">Standort</div>
+                  <div className="text-base font-bold text-stone-800">Siglistorf, Aargau</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right: Anfragepanel */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="rounded-3xl overflow-hidden shadow-2xl"
+          >
+            <div className="px-8 py-6" style={{ background: "#0b3624" }}>
+              <h3 className="text-2xl font-black text-white mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>SCHNELLANFRAGE</h3>
+              <p className="text-white/60 text-sm">Wählen Sie Ihre Einsatzart</p>
+            </div>
+            <div className="bg-white p-8">
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {MISSIONS.map((m) => (
+                  <a
+                    key={m.id}
+                    href={`mailto:info@rohner-transport.ch?subject=Anfrage: ${m.label}`}
+                    className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-stone-100 hover:border-[#0b3624] transition-all duration-200 group text-center"
+                  >
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ background: "rgba(11,54,36,0.08)" }}>
+                      <span style={{ color: "#0b3624" }}>{m.icon}</span>
+                    </div>
+                    <span className="text-xs font-bold text-stone-700">{m.label}</span>
+                  </a>
+                ))}
+              </div>
+
+              <div className="border-t border-stone-100 pt-6">
+                <p className="text-sm text-stone-500 mb-4 text-center">Oder direkt Kontakt aufnehmen:</p>
+                <div className="flex gap-3">
+                  <a
+                    href="tel:0562505454"
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white transition-all active:scale-95"
+                    style={{ background: "#0b3624" }}
+                  >
+                    <PhoneIcon size={16} color="#f4c430" /> Anrufen
+                  </a>
+                  <a
+                    href="mailto:info@rohner-transport.ch"
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold transition-all active:scale-95"
+                    style={{ background: "#f4c430", color: "#0b3624" }}
+                  >
+                    <MailIcon size={16} color="#0b3624" /> E-Mail
+                  </a>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── FOOTER ───────────────────────────────────────────────────────────────────
+function Footer() {
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  return (
+    <footer style={{ background: "#06231a" }}>
+      <div className="max-w-7xl mx-auto px-5 py-16">
+        <div className="grid md:grid-cols-3 gap-10 mb-12">
+          {/* Brand */}
+          <div>
+            <div className="mb-4"><Logo dark /></div>
+            <p className="text-stone-400 text-sm leading-relaxed max-w-xs">
+              Rohner AG Transporte — Zuverlässige Transportlösungen aus Siglistorf, Aargau. Schweizweit verfügbar.
+            </p>
+          </div>
+
+          {/* Links */}
+          <div>
+            <div className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-4">Navigation</div>
+            <div className="flex flex-col gap-2">
+              {[
+                { label: "Mission Control", id: "mission" },
+                { label: "Fuhrpark", id: "fuhrpark" },
+                { label: "Ablauf", id: "timeline" },
+                { label: "Kontakt", id: "kontakt" },
+              ].map((l) => (
+                <button key={l.id} onClick={() => scrollTo(l.id)} className="text-sm text-stone-400 hover:text-white transition-colors text-left w-fit">
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <div className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-4">Kontakt</div>
+            <div className="flex flex-col gap-3">
+              <a href="tel:0562505454" className="flex items-center gap-2 text-sm text-stone-400 hover:text-white transition-colors">
+                <PhoneIcon size={14} color="#f4c430" /> 056 250 54 54
+              </a>
+              <a href="mailto:info@rohner-transport.ch" className="flex items-center gap-2 text-sm text-stone-400 hover:text-white transition-colors">
+                <MailIcon size={14} color="#f4c430" /> info@rohner-transport.ch
+              </a>
+              <div className="flex items-center gap-2 text-sm text-stone-400">
+                <MapPinIcon size={14} color="#f4c430" /> Siglistorf, Aargau
+              </div>
             </div>
           </div>
         </div>
-      </section>
 
-      <section id="fuhrpark" className="px-4 py-20 sm:px-5 sm:py-28">
-        <div className="mx-auto max-w-7xl"><p className="font-black uppercase tracking-[0.35em] text-[#d9a900]">Fuhrpark Scanner</p><h2 className="mt-3 max-w-4xl text-4xl font-black tracking-tight sm:text-6xl">Ein Showroom mit Fokus.</h2><div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{services.map((item, i) => <button key={item.title} onClick={() => { setActiveService(i); scrollToId("leistungen"); }} className="group relative h-[430px] overflow-hidden rounded-[2rem] bg-white text-left shadow-xl ring-1 ring-[#073724]/10 sm:h-[500px]"><img src={item.image} alt={item.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-white via-white/10 to-transparent" /><div className="absolute left-5 top-5 rounded-full bg-white/90 px-4 py-2 text-xs font-black shadow-lg">0{i + 1}</div><div className="absolute bottom-0 left-0 right-0 p-6"><div className="mb-3 inline-flex rounded-full bg-[#f3bf14] px-3 py-1 text-xs font-black">Anklicken</div><h3 className="text-3xl font-black">{item.title}</h3></div></button>)}</div></div>
-      </section>
+        <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          <p className="text-stone-600 text-xs">© {new Date().getFullYear()} Rohner AG Transporte. Alle Rechte vorbehalten.</p>
+          <div className="flex items-center gap-2 text-xs text-stone-600">
+            <SwissIcon size={14} color="#f4c430" /> Made in Switzerland
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
 
-      <section id="kontakt" className="px-4 pb-20 pt-10 sm:px-5">
-        <div className="mx-auto max-w-7xl rounded-[2.5rem] bg-[#f3bf14] p-6 shadow-2xl shadow-[#f3bf14]/25 sm:rounded-[3.5rem] sm:p-14"><div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center"><div><p className="font-black uppercase tracking-[0.35em]">Kontakt</p><h2 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">Bereit für den nächsten Einsatz?</h2><p className="mt-5 max-w-2xl text-base font-bold text-[#073724]/70 sm:text-lg">Hier funktionieren die Buttons: Telefon, E-Mail und Anfrage-Overlay.</p></div><div className="rounded-[2rem] bg-white p-5 shadow-xl sm:p-6"><div className="space-y-4"><a href="tel:0562505454" className="flex items-center gap-3 font-black"><Icon name="phone" className="text-[#d9a900]" /> 056 250 54 54</a><a href="mailto:info@rohner-transport.ch" className="flex items-center gap-3 font-black"><Icon name="mail" className="text-[#d9a900]" /> info@rohner-transport.ch</a><div className="flex items-center gap-3 font-black"><Icon name="pin" className="text-[#d9a900]" /> Siglistorf, Aargau</div></div><Button onClick={() => setQuoteOpen(true)} className="mt-7 w-full rounded-full bg-[#073724] py-5 font-black text-white hover:bg-[#0d5a3c]">Anfrage öffnen</Button></div></div></div>
-      </section>
+// ─── FONT LOADER ──────────────────────────────────────────────────────────────
+function FontLoader() {
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&display=swap";
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, []);
+  return null;
+}
 
-      <footer className="border-t border-[#073724]/10 bg-white px-4 py-8 sm:px-5"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 text-[#073724]/60 md:flex-row md:items-center"><img src={logoData} alt="Rohner AG Transporte Logo" className="h-12 w-auto object-contain" /><div className="text-sm font-semibold">© Rohner AG Transporte — interaktives Redesign-Konzept</div></div></footer>
+// ─── APP ──────────────────────────────────────────────────────────────────────
+export default function RohnerPage() {
+  const [brightness, setBrightness] = useState(0.5);
+  const [modalMission, setModalMission] = useState<Mission | null>(null);
 
-      {quoteOpen && <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#073724]/60 p-4 backdrop-blur-sm"><div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8"><div className="flex items-start justify-between gap-4"><div><p className="font-black uppercase tracking-[0.3em] text-[#d9a900]">Anfrage</p><h3 className="mt-2 text-3xl font-black">Einsatz konfigurieren</h3></div><button onClick={() => setQuoteOpen(false)} className="rounded-full bg-[#f7f3e4] p-3"><Icon name="x" /></button></div><div className="mt-6 grid gap-3 sm:grid-cols-2">{services.map((s, i) => <button key={s.title} onClick={() => setActiveService(i)} className={`rounded-2xl border p-4 text-left font-black ${activeService === i ? "border-[#f3bf14] bg-[#f3bf14]" : "border-[#073724]/10 bg-[#f7f3e4]"}`}><Icon name={s.icon} className="mb-4 h-7 w-7" /> {s.title}</button>)}</div><div className="mt-6 rounded-2xl bg-[#f7f3e4] p-5"><div className="text-sm font-black uppercase tracking-[0.25em] text-[#d9a900]">Ausgewählt</div><div className="mt-1 text-2xl font-black">{active.title}</div><p className="mt-2 font-semibold text-[#073724]/65">{active.text}</p></div><Button onClick={() => setSent(true)} className="mt-6 w-full rounded-full bg-[#073724] px-6 py-5 font-black text-white"><Icon name="send" className="mr-2 h-5 w-5" /> Anfrage simulieren</Button>{sent && <div className="mt-4 rounded-2xl bg-[#f3bf14] p-4 text-center font-black">Demo: Anfrage wurde vorbereitet.</div>}</div></div>}
+  return (
+    <>
+      <FontLoader />
+      <ScrollProgress />
+      <Navbar />
 
-      {videoOpen && <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#073724]/60 p-4 backdrop-blur-sm"><div className="w-full max-w-4xl overflow-hidden rounded-[2rem] bg-white shadow-2xl"><div className="flex items-center justify-between p-5"><div className="font-black">Rohner Einsatz-Video Demo</div><button onClick={() => setVideoOpen(false)} className="rounded-full bg-[#f7f3e4] p-3"><Icon name="x" /></button></div><div className="relative aspect-video overflow-hidden"><img src={images.night} alt="Video Demo" className="h-full w-full object-cover" /><div className="absolute inset-0 flex items-center justify-center bg-black/20"><div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#f3bf14] text-[#073724] shadow-2xl"><Icon name="play" className="h-12 w-12" /></div></div></div></div></div>}
-    </main>
+      <main>
+        <Hero brightness={brightness} />
+        <ContrastSlider value={brightness} onChange={setBrightness} />
+        <StatsBar />
+        <MissionControl onOpenModal={setModalMission} />
+        <FleetShowroom />
+        <TruckCard3D />
+        <Timeline />
+        <Contact />
+      </main>
+
+      <Footer />
+      <MissionModal mission={modalMission} onClose={() => setModalMission(null)} />
+    </>
   );
 }
